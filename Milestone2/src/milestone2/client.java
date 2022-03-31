@@ -1,0 +1,110 @@
+package milestone2;
+
+import java.io.DataInputStream;
+import java.io.PrintStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.Scanner;
+
+public class client implements Runnable{
+
+		  
+	  private static Socket clientSocket = null;
+
+	  private static PrintStream os = null;
+	  
+	  private static DataInputStream is = null;
+
+	  private static BufferedReader inputLine = null;
+	  
+	  private static boolean closed = false;
+	  
+	  public static void main(String[] args) {
+		// The equally distributed  ports.
+		 int portNumber ;
+		  String x;
+	      System.out.println("Enter server name");
+	      @SuppressWarnings("resource")
+		Scanner in = new Scanner(System.in);
+	      x =in.next();
+	      
+	      if(x.equals("server1")) {
+	    	  portNumber=3733;
+	      }
+	      else {
+	    	  portNumber=3734;
+	      }
+
+	    
+		 
+		 
+		 
+	    // The default host.
+	    String host = "localhost";
+
+	    if (args.length < 2) {
+	      System.out
+	          .println("Usage: java MultiThreadChatClient <host> <portNumber>\n"
+	              + "Now using host=" + host + ", portNumber=" + portNumber);
+	    } else {
+	      host = args[0];
+	      portNumber = Integer.valueOf(args[1]).intValue();
+	    }
+
+	    /*
+	     * Open a socket on a given host and port. Open input and output streams.
+	     */
+	    try {
+	      clientSocket = new Socket(host, portNumber);
+	      inputLine = new BufferedReader(new InputStreamReader(System.in));
+	      os = new PrintStream(clientSocket.getOutputStream());
+	      os.println(" ");
+	      is = new DataInputStream(clientSocket.getInputStream());
+	    } catch (UnknownHostException e) {
+	      System.err.println("Don't know about host " + host);
+	    } catch (IOException e) {
+	      System.err.println("Couldn't get I/O for the connection to the host "
+	          + host);
+	    }
+
+	    if (clientSocket != null && os != null && is != null) {
+	      try {
+
+	        
+	    	  
+	        new Thread(new client()).start();
+	        while (!closed) {
+	          os.println(inputLine.readLine().trim());
+	        }
+	       
+	        os.close();
+	        is.close();
+	        clientSocket.close();
+	      } catch (IOException e) {
+	        System.err.println("IOException:  " + e);
+	      }
+	       }
+	  }
+	 
+	  
+	  @SuppressWarnings("deprecation")
+	public void run() {
+	   
+	    String responseLine;
+	    try {
+	      while ((responseLine = is.readLine()) != null) {
+	        System.out.println(responseLine);
+	        if (responseLine.indexOf("*** Bye") != -1)
+	          break;
+	      }
+	      closed = true;
+	    } catch (IOException e) {
+	      System.err.println("IOException:  " + e);
+	    }
+	  }
+	
+	
+}
